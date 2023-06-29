@@ -1,16 +1,18 @@
 # allow players to interact with board
 class Mastermind
-  def initialize
+  def initialize(player, code = [])
   # number of iterations of the game
   @number_of_games = 0
   # the color codes for the game
-  @code = []
+  @code = code
+  @player = player
   end
   
 
   # the colors for the game
   COLORS = ["blue", "green", "red", "purple", "yellow", "white"]
-
+  
+  # computer randomly selects the secret colors 
   # generate unique color code
   def generate_code
     4.times do 
@@ -20,7 +22,7 @@ class Mastermind
     @code
   end
   
-  # computer randomly selects the secret colors 
+  
   # human guesses them
   # give proper feedback
   # colored key peg for correct color and position
@@ -43,6 +45,13 @@ end
 
 # create player and if they are the codemaker or codebreaker
 class Player
+  def initialize(maker_or_breaker)
+    if maker_or_breaker == "breaker"
+      @role = "breaker"
+    else
+      @role = "maker"
+    end
+  end
   # also keeps track of the points made
   # codemaker gets one point for each guess of codebreaker
   # extra point is earned by the codemaker if code is unbroken
@@ -53,6 +62,7 @@ end
 class Main
 
 end
-
-game = Mastermind.new
+player = Player.new("breaker")
+game = Mastermind.new(player)
 p game.generate_code
+p player
