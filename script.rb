@@ -6,9 +6,12 @@ class Mastermind
   # the color codes for the game
   @code = code
   @player = player
+  @guesses = []
   end
   
-
+  def player
+    @player
+  end
   # the colors for the game
   COLORS = ["blue", "green", "red", "purple", "yellow", "white"]
   
@@ -24,6 +27,20 @@ class Mastermind
   
   
   # human guesses them
+  def get_guesses
+    tries = ["first", "second", "third", "fourth"]
+    4.times do
+      current_try = tries.shift
+      p "Input your #{current_try} code."
+      answer = gets.chomp.downcase
+      until COLORS.include?(answer)
+        p "Incorrect color. Please try again using the colors #{COLORS}"
+        answer = gets.chomp.downcase
+      end
+      @guesses << answer
+    end
+    @guesses
+  end
   # give proper feedback
   # colored key peg for correct color and position
   # white key peg for correct color in wrong position
@@ -65,4 +82,5 @@ end
 player = Player.new("breaker")
 game = Mastermind.new(player)
 p game.generate_code
-p player
+p game.player
+p game.get_guesses
