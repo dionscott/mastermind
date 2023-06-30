@@ -110,10 +110,14 @@ class Display
   def display_guesses(guesses)
     puts "You have made #{guesses.length} guesses."
     guesses.each_with_index do |guess, index|
-      puts "Guess ##{index + 1} is #{guess}"
+      puts "Guess ##{index + 1} is #{guess.join(", ")}."
     end
   end
   # displays the code
+
+  def display_code(code)
+    puts "The secret code is #{code.join(", ")}."
+  end
   # displays the colored pegs
   # displays the turn
 
@@ -170,12 +174,16 @@ end
 player = Player.new("breaker")
 game = Mastermind.new(player)
 game.code = ["white", "red", "blue", "green"]
+code = game.code
 game.player
 game.guesses = ["purple", "yellow", "white", "purple"]
 game.check_matches
-p board = Board.new(game.code)
+
+p board = Board.new(code)
+
 3.times { board.add_guess(game.generate_random_colors) }
 p board.guesses
 p board.turn
 display = Display.new
 display.display_guesses(board.guesses)
+display.display_code(code)
