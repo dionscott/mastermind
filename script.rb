@@ -1,6 +1,6 @@
 # allow players to interact with board
 class Mastermind
-  attr_accessor :guesses, :code
+  attr_accessor :won
   def initialize(player)
   # number of iterations of the game
   @number_of_games = 0
@@ -8,6 +8,7 @@ class Mastermind
   # since code is kept on the board I won't need it here
   # remove later
   @player = player
+  @won = false
   end
   
   def player
@@ -38,17 +39,19 @@ class Mastermind
     random_colors
   end
 
-  
   # takes input and returns guesses array
   def human_guesses
     tries = ["first", "second", "third", "fourth"]
     guesses = []
     4.times do
       current_try = tries.shift
+      # replace with display get_guess
       p "Input your #{current_try} code."
       answer = gets.chomp.downcase
       until COLORS.include?(answer)
-        p "Incorrect color. Please try again using the colors: #{COLORS}"
+        # replace with display incorrect_color
+        p "Incorrect color. Please try again using the colors: 
+        #{COLORS.join(", ")}."
         answer = gets.chomp.downcase
       end
       guesses << answer
@@ -84,15 +87,14 @@ class Mastermind
     # return an array with how many colored pegs vs white
     matching_pegs
   end
-  # give proper feedback
-  # colored key peg for correct color and position
-  # white key peg for correct color in wrong position
+
   # game lasts 12 turns
   # this game will include different colors
   # find a way to include board.turn
-  def game_over?(guesses)
-    # checks the number of guesses
-    if guesses.length >= 12
+  def game_over?(turn)
+    # checks if the game has been won
+    # checks the number of turns
+    if turn >= 12 || @won == true
       true
     end
   end
@@ -105,8 +107,13 @@ class Display
     puts "Let's play Mastermind"
   end
 
+  #display current guess(es)
+  def display_current_guess(guess)
+    puts "Your guess is #{guess.join(", ")}."
+  end
+
   # displays the guesses
-  def display_guesses(guesses)
+  def display_all_guesses(guesses)
     puts "You have made #{guesses.length} guesses."
     guesses.each_with_index do |guess, index|
       puts "Guess ##{index + 1} is #{guess.join(", ")}."
@@ -127,12 +134,23 @@ class Display
   # displays the turn
   def display_turn(turn)
     if turn < 12
-      puts "Turn ##{turn}."
+      puts "Turn ##{turn}. 
+      Choose a color: #{Mastermind::COLORS.join(", ")}."
     else
-      puts "Turn ##{turn}. Last turn. Choose wisely."
+      puts "Turn ##{turn}. Last turn. Choose wisely.
+      Choose a color: #{Mastermind::COLORS.join(", ")}."
     end
   end
 
+  def win_or_lose(outcome, code, number_of_guesses)
+    code_string = code.join(", ")
+    if outcome == "win"
+      puts "Congratulations! You win! The code was #{code_string}. 
+      It took you #{number_of_guesses} guesses."
+    else
+      puts "Better luck next time. The code was #{code_string}."
+    end
+  end
 end
 
 # create the board and keep the game information
@@ -166,7 +184,6 @@ class Board
   def turn
     @guesses.length + 1
   end
-
 end
 
 # create player and if they are the codemaker or codebreaker
@@ -177,33 +194,56 @@ class Player
     else
       @role = "maker"
     end
+    @points = 0
   end
   # also keeps track of the points made
   # codemaker gets one point for each guess of codebreaker
   # extra point is earned by the codemaker if code is unbroken
-
 end
 
 # calls the main instances of the game
 class Main
+  def self.play_game
+    # start the game with display
+    display = Display.new
+    # create new player
+    player = Player.new("breaker")
+    # create new game with player
+    game = Mastermind.new(player)
+    # generate random code from the game
+    code = game.generate_code
+    # create board with new code
+    board = Board.new(code)
+    # get human guesses
+    # game ends after 12 turns game.game_over?(guesses)
+    turn = board.turn
+    # show the secret code
+    p code
+    until game.game_over?(turn)
+      turn = board.turn
+      # display the turn
+      display.display_turn(turn)
+      # ask the player for input
+      guess = game.human_guesses
+      board.add_guess(guess)
+      #checking if board.turn works
+      p board.turn
+      # display human guesses and matching pegs
+      peg = game.check_matches(code, guess)
+      display.display_pegs(peg)
+      # if all the pegs are colored the game is won
+      game.won = true if peg.all?("colored") && peg.length == 4
+      display.display_all_guesses(board.guesses)
+    end
 
+    # need function to check if game is won
+    if game.won
+      display.win_or_lose("win", code, turn)
+      # ask to reset game or quit
+    else
+      display.win_or_lose("lose", code, turn)
+    end
+  end
 end
-# start the game with display
-display = Display.new
-# create new player
-player = Player.new("breaker")
-# create new game with player
-game = Mastermind.new(player)
-# generate code from the game
-code = game.generate_code
-# create board with new code
-p board = Board.new(code)
-# add guesses to the board
-3.times { board.add_guess(game.generate_random_colors) }
-# display the board guesses
-display.display_guesses(board.guesses)
-# display the code
-display.display_code(code)
-# check the matches
-pegs = game.check_matches(board.code, board.guesses[-1])
-display.display_pegs(pegs)
+
+Main.play_game
