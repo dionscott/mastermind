@@ -5,8 +5,11 @@ class Mastermind
   # number of iterations of the game
   @number_of_games = 0
   # the color codes for the game
+  # since code is kept on the board I won't need it here
+  # remove later
   @code = code
   @player = player
+  # will guesses also be kept on the board
   @guesses = []
   @matches = []
   end
@@ -77,7 +80,12 @@ class Mastermind
   # white key peg for correct color in wrong position
   # game lasts 12 turns
   # this game will include different colors
-
+  def game_over?(guesses)
+    # checks the number of guesses
+    if guesses.length >= 12
+      true
+    end
+  end
 end
 
 # displays board and gameplay messages
@@ -88,6 +96,24 @@ end
 
 # create the board and keep the game information
 class Board
+  def initialize(code)
+    @code = code
+    @guesses = []
+  end
+
+  # use to see the current guesses of the game
+  def guesses
+    @guesses
+  end
+
+  # takes an array and adds it to the board
+  def add_guess(guess)
+    @guesses << guess
+  end
+  # create a board that holds the code
+  # hold the guesses 
+  # check if the collected guesses are longer than 12
+  # after that game over
 
 end
 
@@ -113,7 +139,10 @@ end
 player = Player.new("breaker")
 game = Mastermind.new(player)
 game.code = ["white", "red", "blue", "green"]
-p game.player
+game.player
 game.guesses = ["purple", "yellow", "white", "purple"]
-# should be 3 colors
-p game.check_matches
+game.check_matches
+p board = Board.new(game.code)
+12.times { board.add_guess(game.guesses) }
+p board.guesses
+p game.game_over?(board.guesses)
