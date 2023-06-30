@@ -31,6 +31,16 @@ class Mastermind
     @code
   end
   
+  # generate random colors
+  def generate_random_colors
+    random_colors = []
+    4.times  do
+      color_code = COLORS.sample
+      random_colors << color_code
+    end
+    random_colors
+  end
+
   
   # human guesses them
   def human_guesses
@@ -80,6 +90,7 @@ class Mastermind
   # white key peg for correct color in wrong position
   # game lasts 12 turns
   # this game will include different colors
+  # find a way to include board.turn
   def game_over?(guesses)
     # checks the number of guesses
     if guesses.length >= 12
@@ -90,7 +101,21 @@ end
 
 # displays board and gameplay messages
 class Display
+  # intro message
+  def initialize
+    puts "Let's play Mastermind"
+  end
 
+  # displays the guesses
+  def display_guesses(guesses)
+    puts "You have made #{guesses.length} guesses."
+    guesses.each_with_index do |guess, index|
+      puts "Guess ##{index + 1} is #{guess}"
+    end
+  end
+  # displays the code
+  # displays the colored pegs
+  # displays the turn
 
 end
 
@@ -106,14 +131,20 @@ class Board
     @guesses
   end
 
+  # use to get the current code
+  def code
+    @code
+  end
+
   # takes an array and adds it to the board
   def add_guess(guess)
     @guesses << guess
   end
-  # create a board that holds the code
-  # hold the guesses 
-  # check if the collected guesses are longer than 12
-  # after that game over
+
+  # use to return the current turn
+  def turn
+    @guesses.length + 1
+  end
 
 end
 
@@ -143,6 +174,8 @@ game.player
 game.guesses = ["purple", "yellow", "white", "purple"]
 game.check_matches
 p board = Board.new(game.code)
-12.times { board.add_guess(game.guesses) }
+3.times { board.add_guess(game.generate_random_colors) }
 p board.guesses
-p game.game_over?(board.guesses)
+p board.turn
+display = Display.new
+display.display_guesses(board.guesses)
