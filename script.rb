@@ -1,17 +1,13 @@
 # allow players to interact with board
 class Mastermind
   attr_accessor :guesses, :code
-  def initialize(player, code = [])
+  def initialize(player)
   # number of iterations of the game
   @number_of_games = 0
   # the color codes for the game
   # since code is kept on the board I won't need it here
   # remove later
-  @code = code
   @player = player
-  # will guesses also be kept on the board
-  @guesses = []
-  @matches = []
   end
   
   def player
@@ -24,11 +20,12 @@ class Mastermind
   # computer randomly selects the secret colors 
   # generate unique color code
   def generate_code
+    code = []
     4.times do 
-      color_code = (COLORS - @code).sample
-      @code << color_code
+      color_code = (COLORS - code).sample
+      code << color_code
     end
-    @code
+    code
   end
   
   # generate random colors
@@ -42,9 +39,10 @@ class Mastermind
   end
 
   
-  # human guesses them
+  # takes input and returns guesses array
   def human_guesses
     tries = ["first", "second", "third", "fourth"]
+    guesses = []
     4.times do
       current_try = tries.shift
       p "Input your #{current_try} code."
@@ -53,37 +51,38 @@ class Mastermind
         p "Incorrect color. Please try again using the colors: #{COLORS}"
         answer = gets.chomp.downcase
       end
-      @guesses << answer
+      guesses << answer
     end
-    @guesses
+    guesses
   end
 
-  def check_matches
+  # checks for matches and returns an array with pegs
+  def check_matches(code, guesses)
     # create temporary array for guesses
-    duplicate_guesses = @guesses.dup
-    duplicate_code = @code.dup
+    duplicate_guesses = guesses.dup
+    duplicate_code = code.dup
     # reset the matches
-    @matches = []
+    matching_pegs = []
     (0..3).each do |i|
       # take each number and check both arrays
-      if @code[i] == @guesses[i]
+      if code[i] == guesses[i]
         # delete the correct guess and code from the duplicate array
-        duplicate_guesses.delete(@guesses[i])
-        duplicate_code.delete(@code[i])
+        duplicate_guesses.delete(guesses[i])
+        duplicate_code.delete(code[i])
         # add to the matches array
-        @matches << "color"
+        matching_pegs << "colored"
       end
     end
     # check the temp_guesses array to see if any colors match
     if duplicate_guesses
       duplicate_guesses.each do |guess|
         if duplicate_code.include?(guess)
-          @matches << "white"
+          matching_pegs << "white"
         end
       end
     end
     # return an array with how many colored pegs vs white
-    @matches
+    matching_pegs
   end
   # give proper feedback
   # colored key peg for correct color and position
@@ -113,13 +112,26 @@ class Display
       puts "Guess ##{index + 1} is #{guess.join(", ")}."
     end
   end
-  # displays the code
 
+  # displays the code
   def display_code(code)
     puts "The secret code is #{code.join(", ")}."
   end
+
   # displays the colored pegs
+  def display_pegs(pegs)
+    puts "This guess has #{pegs.count("colored")} colored pegs
+    and #{pegs.count("white")} white pegs."
+  end
+
   # displays the turn
+  def display_turn(turn)
+    if turn < 12
+      puts "Turn ##{turn}."
+    else
+      puts "Turn ##{turn}. Last turn. Choose wisely."
+    end
+  end
 
 end
 
@@ -143,6 +155,11 @@ class Board
   # takes an array and adds it to the board
   def add_guess(guess)
     @guesses << guess
+  end
+
+  # reset the guesses
+  def reset_guesses
+    @guesses = []
   end
 
   # use to return the current turn
@@ -171,19 +188,22 @@ end
 class Main
 
 end
-player = Player.new("breaker")
-game = Mastermind.new(player)
-game.code = ["white", "red", "blue", "green"]
-code = game.code
-game.player
-game.guesses = ["purple", "yellow", "white", "purple"]
-game.check_matches
-
-p board = Board.new(code)
-
-3.times { board.add_guess(game.generate_random_colors) }
-p board.guesses
-p board.turn
+# start the game with display
 display = Display.new
+# create new player
+player = Player.new("breaker")
+# create new game with player
+game = Mastermind.new(player)
+# generate code from the game
+code = game.generate_code
+# create board with new code
+p board = Board.new(code)
+# add guesses to the board
+3.times { board.add_guess(game.generate_random_colors) }
+# display the board guesses
 display.display_guesses(board.guesses)
+# display the code
 display.display_code(code)
+# check the matches
+pegs = game.check_matches(board.code, board.guesses[-1])
+display.display_pegs(pegs)
