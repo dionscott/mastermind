@@ -101,7 +101,7 @@ class Mastermind
 end
 
 # displays board and gameplay messages
-class Display
+module Display
   # intro message
   def initialize
     puts "Let's play Mastermind"
@@ -113,10 +113,11 @@ class Display
   end
 
   # displays the guesses
-  def display_all_guesses(guesses)
+  def display_guesses_and_pegs(guesses, pegs)
     puts "You have made #{guesses.length} guesses."
     guesses.each_with_index do |guess, index|
       puts "Guess ##{index + 1} is #{guess.join(", ")}."
+      puts display_pegs(pegs[index])
     end
   end
 
@@ -158,6 +159,7 @@ class Board
   def initialize(code)
     @code = code
     @guesses = []
+    @pegs = []
   end
 
   # use to see the current guesses of the game
@@ -165,6 +167,9 @@ class Board
     @guesses
   end
 
+  def pegs
+    @pegs
+  end
   # use to get the current code
   def code
     @code
@@ -173,6 +178,10 @@ class Board
   # takes an array and adds it to the board
   def add_guess(guess)
     @guesses << guess
+  end
+
+  def add_peg(peg)
+    @pegs << peg
   end
 
   # reset the guesses
@@ -203,47 +212,50 @@ end
 
 # calls the main instances of the game
 class Main
-  def self.play_game
-    # start the game with display
-    display = Display.new
+  include Display
+  def initialize(player_type = "breaker")
     # create new player
-    player = Player.new("breaker")
+    @player = Player.new(player_type)
     # create new game with player
-    game = Mastermind.new(player)
+    @game = Mastermind.new(@player)
     # generate random code from the game
-    code = game.generate_code
+    @code = @game.generate_code
     # create board with new code
-    board = Board.new(code)
+    @board = Board.new(@code)
+  end
+
+  def play_game
     # get human guesses
     # game ends after 12 turns game.game_over?(guesses)
-    turn = board.turn
+    turn = @board.turn
     # show the secret code
-    p code
-    until game.game_over?(turn)
-      turn = board.turn
+    p @code
+    until @game.game_over?(turn)
+      turn = @board.turn
       # display the turn
-      display.display_turn(turn)
+      display_turn(turn)
       # ask the player for input
-      guess = game.human_guesses
-      board.add_guess(guess)
+      guess = @game.human_guesses
+      @board.add_guess(guess)
       #checking if board.turn works
-      p board.turn
+      p @board.turn
       # display human guesses and matching pegs
-      peg = game.check_matches(code, guess)
-      display.display_pegs(peg)
+      peg = @game.check_matches(@code, guess)
+      @board.add_peg(peg)
       # if all the pegs are colored the game is won
-      game.won = true if peg.all?("colored") && peg.length == 4
-      display.display_all_guesses(board.guesses)
+      @game.won = true if peg.all?("colored") && peg.length == 4
+      display_guesses_and_pegs(@board.guesses, @board.pegs)
     end
 
     # need function to check if game is won
-    if game.won
-      display.win_or_lose("win", code, turn)
+    if @game.won
+      win_or_lose("win", @code, turn)
       # ask to reset game or quit
     else
-      display.win_or_lose("lose", code, turn)
+      win_or_lose("lose", @code, turn)
     end
   end
 end
 
-Main.play_game
+new_game = Main.new
+new_game.play_game
