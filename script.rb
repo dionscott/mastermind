@@ -8,6 +8,11 @@ module Display
     puts "Let's play Mastermind"
   end
 
+  def display_maker_text
+    puts "Input your secret code. The computer will try 
+    and guess the code in 12 turns."
+  end
+
   def display_wrong_input
     puts "Wrong input. Try again."
   end
@@ -75,12 +80,8 @@ class Mastermind
   include Display
 
   def initialize
-    # new player is nil till setup
     @player = nil
-    # generate random code from the game
-    # @code = @game.generate_code
     @code = nil
-    # create board with new code
     @board = Board.new
     @number_of_games = 0
     @won = false
@@ -106,19 +107,18 @@ class Mastermind
     # if breaker run breaker version
     if @player.role == "breaker"
       breaker
-      if game_won?
-        display_win(@code, next_turn - 1)
-      else
-        display_lose(@code)
-      end
+      win_or_lose
     else
       maker
+      win_or_lose
     end
   end
 
-  # how the game should run when the player is a maker
   def maker
-    p "This is the game for makers"
+    display_maker_text
+    @code = get_player_code
+    get_turn
+    play_game(@player.role)
   end
 
   def breaker
@@ -126,11 +126,20 @@ class Mastermind
     @code = generate_code
     # show the secret code will remove later
     display_code(@code)
-    until game_over?(next_turn)
-      # display the turn
-      display_turn(next_turn)
-      # ask the player for input
-      guess = player_input
+    get_turn
+    play_game(@player.role)
+  end
+
+  def play_game(role)
+    until game_over?(@turn)
+      display_turn(@turn)
+      # changes based on if the player is the breaker or maker
+      if role == "breaker"
+        guess = get_player_code
+      else
+        # this will contain the logic for computer play
+        guess = generate_code
+      end
       @board.add_guess(guess)
       # display human guesses and matching pegs
       peg = check_matches(@code, guess)
@@ -139,10 +148,20 @@ class Mastermind
       # check if the game has been won if so change won
       if game_won?
         @won = true
+      else
+        get_turn
       end
     end
   end
   
+  def win_or_lose
+    if game_won?
+      display_win(@code, @turn)
+    else
+      display_lose(@code)
+    end
+  end
+
   def current_guesses
     @board.guesses
   end
@@ -151,28 +170,19 @@ class Mastermind
     @board.pegs[-1]
   end
 
-  # computer randomly selects the secret colors 
-  def generate_code
-    code = []
-    4.times do 
-      color_code = (COLORS).sample
-      code << color_code
+  # generate code based on input
+  def generate_code(input_code = [])
+    if input_code.empty?
+      4.times do 
+        color_code = (COLORS).sample
+        input_code << color_code
+      end
     end
-    code
-  end
-  
-  # generate random colors
-  def generate_random_colors
-    random_colors = []
-    4.times  do
-      color_code = COLORS.sample
-      random_colors << color_code
-    end
-    random_colors
+    input_code
   end
 
   # takes input and returns guesses array
-  def player_input
+  def get_player_code
     tries = ["first", "second", "third", "fourth"]
     input = []
     4.times do
@@ -206,9 +216,6 @@ class Mastermind
         matching_pegs << "colored"
       end
     end
-    # check duplicate guess and code here
-    p duplicate_guesses
-    p duplicate_code
     # check the temp_guesses array to see if any colors match
     if duplicate_guesses
       duplicate_guesses.each do |guess|
@@ -230,8 +237,8 @@ class Mastermind
   end
 
   # use to return the current turn
-  def next_turn
-    @board.guesses.length + 1
+  def get_turn
+    @turn = @board.guesses.length + 1
   end
   
   def game_won?
