@@ -86,6 +86,7 @@ class Mastermind
     @number_of_games = 0
     @won = false
     @turn = nil
+    @removed_colors = []
   end
 
   def setup
@@ -116,7 +117,7 @@ class Mastermind
 
   def maker
     display_maker_text
-    @code = get_player_code
+    @code = get_player_input
     get_turn
     play_game(@player.role)
   end
@@ -135,10 +136,10 @@ class Mastermind
       display_turn(@turn)
       # changes based on if the player is the breaker or maker
       if role == "breaker"
-        guess = get_player_code
+        guess = get_player_input
       else
         # this will contain the logic for computer play
-        guess = generate_code
+        guess = get_computer_guess
       end
       @board.add_guess(guess)
       # display human guesses and matching pegs
@@ -152,6 +153,30 @@ class Mastermind
         get_turn
       end
     end
+  end
+
+  def get_computer_guess
+    guesses = @board.guesses
+    pegs = @board.pegs
+    current_peg = pegs[-1]
+    guess = []
+    unless guesses.empty?
+      if current_pegs.include?("colored") || current_pegs.include?("white")
+        4.times { guess << (COLORS - @removed_colors).sample }
+      else
+        # remove those two colors and sample without those colors
+        @removed_colors << guesses.uniq
+      end
+      # do some logic
+    else
+      # here I want to generate 2 colors
+      sample = COLORS.sample(2)
+      p sample
+      sample.unshift(sample.first)
+      sample.append(sample.last)
+      p guess << sample
+    end
+    guess.flatten
   end
   
   def win_or_lose
@@ -182,7 +207,7 @@ class Mastermind
   end
 
   # takes input and returns guesses array
-  def get_player_code
+  def get_player_input
     tries = ["first", "second", "third", "fourth"]
     input = []
     4.times do
